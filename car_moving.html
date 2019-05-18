@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>car moving</title>
+</head>
+<style>
+    button {
+        width: 100px;
+        height: 50px;
+        display: inline-block;
+        position: relative;
+        border-radius: 10px;
+
+    }
+
+    .button {
+        position: relative;
+        width: 500px;
+        height: 50px;
+        top: 250px;
+        margin-left: auto;
+        margin-right: auto;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+    }
+</style>
+<body>
+<div id="car"></div>
+<div class="button">
+    <button id="clockwise">Run Clockwise</button>
+    <button id="anticlockwise">Run Anti-Clockwise</button>
+    <button id="turnaround">Turn Around</button>
+    <button id="stopgame">STOP</button>
+</div>
+
+<script>
+    let loop;
+    let source = "";
+    let length;
+    let width;
+    let position = [];
+    let angle;
+    let speed;
+    let Car = function (source, length, width, position, angle, speed) {
+        this.source = source;
+        this.length = length;
+        this.width = width;
+        this.position = position;
+        this.angle = angle;
+        this.speed = speed;
+
+        this.stop = function () {
+            this.speed = 0;
+        }
+        this.moveforward = function () {
+            this.position[0] += this.speed * Math.cos(toRadian(this.angle));
+            this.position[1] += this.speed * Math.sin(toRadian(this.angle));
+        };
+
+        this.turnleft = function () {
+            this.angle -= 30;
+        };
+        this.turnright = function () {
+            this.angle += 30;
+        };
+        this.turnaround = function () {
+            if (this.angle > 0) {
+                this.angle += 36;
+            }
+            if (this.angle <= 0) this.angle -= 36;
+
+        }
+        this.showCar = function () {
+            let result = "";
+            result += '<img style="position:absolute; ';
+            result += 'left:' + this.position[0] + 'px' + '; top:' + this.position[1] + 'px';
+            result += ' ;transform: rotate(' + this.angle + 'deg);"';
+            result += ' src="' + this.source + '"';
+            result += ' height="' + this.width + '"' + ' width="' + this.length + '">';
+            console.log(result);
+            document.getElementById("car").innerHTML = result;
+        }
+        this.isTouchLimitXX = function () {
+
+            return this.position[0] >= (limitX - this.length);
+        }
+        this.isTouchLimitYY = function () {
+
+            return this.position[1] >= (limitY - this.width);
+        }
+        this.isTouchLimitX0 = function () {
+            return this.position[0] < 0;
+        }
+        this.isTouchLimitY0 = function () {
+            return this.position[1] < 0;
+        }
+    }
+    let mazda;
+    initMazda();
+    let limitX = window.innerWidth;
+    let limitY = window.innerHeight;
+
+    document.getElementById("stopgame").onclick = function () {
+        clearInterval(loop);
+    };
+    document.getElementById("clockwise").onclick = function () {
+        loop = setInterval(runclockwise, 100);
+
+    };
+    document.getElementById("anticlockwise").onclick = function () {
+        loop = setInterval(runAntiClockwise, 100);
+
+    };
+    document.getElementById("turnaround").onclick = function () {
+        loop1 = setInterval(function () {
+            mazda.turnaround();
+            mazda.showCar();
+            if (!(mazda.angle % 90)) clearInterval(loop1);
+        }, 100)
+    }
+
+    function runclockwise() {
+        if (mazda.angle > 360 && mazda.angle < 720) mazda.angle -= 360;
+        if (mazda.angle <= 0 && mazda.angle >= -360) mazda.angle += 360;
+        if (mazda.angle < -360) mazda.angle += 720;
+
+        mazda.showCar();
+        if (mazda.angle == 360 && !mazda.isTouchLimitXX()
+            || (mazda.angle == 90 && !mazda.isTouchLimitYY())
+            || (mazda.angle == 180 && !mazda.isTouchLimitX0())
+            || (mazda.angle == 270 && !mazda.isTouchLimitY0())
+        ) {
+            mazda.moveforward();
+
+        } else if (mazda.angle < 450 && mazda.isTouchLimitXX()
+            || (mazda.angle < 180 && mazda.isTouchLimitYY())
+            || (mazda.angle < 270 && mazda.isTouchLimitX0())
+            || (mazda.angle < 360 && mazda.isTouchLimitY0())
+
+        ) {
+            mazda.turnright();
+        }
+
+    }
+
+    function runAntiClockwise() {
+        if (mazda.angle <= -360 && mazda.angle > -720) mazda.angle = mazda.angle + 360;
+        if (mazda.angle > 0 && mazda.angle < 360) mazda.angle = mazda.angle - 360;
+        if (mazda.angle <= -720) mazda.angle += 720;
+        if (mazda.angle >= 360) mazda.angle -= 720;
+
+        mazda.showCar();
+        if (mazda.angle == 0 && !mazda.isTouchLimitXX()
+            || (mazda.angle == -90 && !mazda.isTouchLimitY0())
+            || (mazda.angle == -180 && !mazda.isTouchLimitX0())
+            || (mazda.angle == -270 && !mazda.isTouchLimitYY())
+
+        ) {
+            mazda.moveforward();
+        } else if (mazda.angle > -90 && mazda.isTouchLimitXX()
+            || (mazda.angle > -180 && mazda.isTouchLimitY0())
+            || (mazda.angle > -270 && mazda.isTouchLimitX0())
+            || (mazda.angle > -360 && mazda.isTouchLimitYY())
+        ) {
+            mazda.turnleft();
+        }
+    }
+
+
+    function toRadian(x) {
+        return x / 180 * Math.PI;
+    }
+
+
+    function initMazda() {
+        source = "mazda.png";
+        length = 100;
+        width = 50;
+        position = [200, 200];
+        angle = 0;
+        speed = 10;
+        mazda = new Car(source, length, width, position, angle, speed);
+
+    }
+
+
+</script>
+</body>
+</html>
